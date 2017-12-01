@@ -59,6 +59,7 @@ extern int StackLevel;
 
 bool compareFieldList(FieldList* node1, FieldList* node2);
 bool compareType(Type* node1, Type* node2);
+bool Compare_StructureType(Type* node1, Type* node2);
 int calcHashIndex(char* str);
 void freeFieldList(FieldList* head);
 FieldList* getFieldListTail(FieldList* head);

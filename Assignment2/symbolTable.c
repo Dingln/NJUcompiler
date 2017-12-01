@@ -170,11 +170,35 @@ bool compareType(Type* node1, Type* node2){
 		return compareType(node1->u.array.elem, node2->u.array.elem);
 	}
 	else{
-		if(strcmp(node1->u.structure.name, node2->u.structure.name)!=0)
-			return false;
+//		if(strcmp(node1->u.structure.name, node2->u.structure.name)!=0)
+//			return false;
+		return Compare_StructureType(node1, node2);
 	}
 	return true;
 }
+
+bool Compare_StructureType(Type* node1, Type* node2) {
+	if(strcmp(node1->u.structure.name, node2->u.structure.name) == 0)
+		return true;
+	else {
+		struct FieldList_ *list1, *list2;
+		list1 = node1->u.structure.inList;
+		list2 = node2->u.structure.inList;
+
+		while(list1 != NULL && list2 != NULL) {
+			if(true == compareType(list1->type, list2->type)) {
+				list1 = list1->next;
+				list2 = list2->next;
+			}
+			else return false;
+		}
+		if(list1 == NULL && list2 == NULL)
+			return true;
+//		return false;
+	}
+	return false;
+}
+
 
 void freeFieldList(FieldList* head){
 	while(head!=NULL){
