@@ -8,7 +8,12 @@ void Program(Node* root){
 		ExtDefList(root->Child);
 	}
 	//TODO: YOU MAY NEED TO CHECK FUNCLIST HERE.
-	
+	while(FuncList != NULL) {
+		if(FuncList->is_define == false)
+			printf("Error type 18 at Line %d: function declarated but not defined '%s'. \n", FuncList->line, FuncList->name);
+		FuncList = FuncList->next;
+	}
+
 }
 
 void ExtDefList(Node* node){
@@ -16,7 +21,7 @@ void ExtDefList(Node* node){
 		if(node->Child!=NULL){
 			ExtDef(node->Child);
 			//TODO: TO DEBUG
-			printf("ExtDefList1\n");
+			// printf("ExtDefList1\n");
 			ExtDefList(node->Child->Sibling);
 		}
 	}
@@ -28,7 +33,7 @@ void ExtDef(Node* node){
 	
 	Type* varType = Specifier(child);
 	//TODO:TO DEBUG
-	printf("ExtDef0\n");
+	// printf("ExtDef0\n");
 
 	child = child->Sibling;
 	
@@ -49,28 +54,27 @@ void ExtDef(Node* node){
 	else if(strcmp(child->type, "FunDec")==0){
 		//defination
 		if(strcmp(child->Sibling->type, "CompSt") == 0) {
-			FuncDef* newFunc = FunDec(child, varType, true);
+			FuncDef* newFunc = FunDec(child, varType, true, child->line);
 			//TODO: TO DEBUG
-			printFuncDef(newFunc);
-			printf("ExtDef1\n");
+			// printFuncDef(newFunc);
+			// printf("ExtDef1\n");
 			Type* rtnType = CompSt(child->Sibling, varType);
 			//TODO: TO DEBUG
-			printf("ExtDef2\n");
+			// printf("ExtDef2\n");
 
 			if(rtnType==NULL){
-				printf("Error type 8 at line %d: no return statement in function '%s'. \n", child->line, newFunc->name);
+				printf("Error type 8 at Line %d: no return statement in function '%s'. \n", child->line, newFunc->name);
 			}
 
 			FuncDef *temp = findFunc(newFunc->name);
 			if(temp != NULL){
 				if(temp->is_define == true) {
-					printf("Error type 4 at line %d: redefined function '%s'. \n", child->line, newFunc->name);
+					printf("Error type 4 at Line %d: redefined function '%s'. \n", child->line, newFunc->name);
 					free(newFunc);
 					return;
 				}
-				//TODO: constant declaration
 				else if(compareFunc(temp, newFunc) == false) {
-					printf("Error type 19 at line %d: declaration or defination of '%s' function conflicts. \n", child->line, newFunc->name);
+					printf("Error type 19 at Line %d: declaration or defination of '%s' function conflicts. \n", child->line, newFunc->name);
 					free(newFunc);
 					return;
 				}
@@ -80,25 +84,20 @@ void ExtDef(Node* node){
 		}
 		//declaration
 		else {
-			FuncDef* newFunc = FunDec(child, varType, false);
+			FuncDef* newFunc = FunDec(child, varType, false, child->line);
 			FuncDef *temp = findFunc(newFunc->name);
 			if(temp != NULL){
 				printf("BEGIN\n");
-				//TODO: constant declaration
 				if(compareFunc(temp, newFunc) == false) {
-					printf("Error type 19 at line %d: function declaration or defination conficted '%s'. \n", child->line, newFunc->name);
+					printf("Error type 19 at Line %d: function declaration or defination conficted '%s'. \n", child->line, newFunc->name);
 					free(newFunc);
 					return;
 				}
 			}
 			insertFunc(newFunc);
-		}
-
-	
-
-		
+		}	
 		//TODO: TO DEBUG
-		printFuncList();
+		// printFuncList();
 	}
 }
 
@@ -108,7 +107,7 @@ void ExtDecList(Node* node, Type* varType){
 	//defination of global variable
 	FieldList* var=VarDec(child, varType, 1);
 	if(findVar(var->name)!=NULL){
-		printf("Error type 3 at line %d: redefined variable '%s'.\n", child->line, child->value);
+		printf("Error type 3 at Line %d: redefined variable '%s'.\n", child->line, child->value);
 	}
 	else{
 		insertVarTable(var);
@@ -127,17 +126,17 @@ FieldList* VarDec(Node* node, Type* varType, int from){
 	FieldList* rtn=NULL;
 	
 	//TODO: TO DEBUG
-	printf("VarDec0\n");
-	printf("%s\n", child->type);
+	// printf("VarDec0\n");
+	// printf("%s\n", child->type);
 
 	if(strcmp(child->type, "ID")==0){
 		//TODO: TO DEBUG
-		printf("VarDec1\n");
+		// printf("VarDec1\n");
 		if(findVar(child->value)!=NULL){
 			if(from==1)
-				printf("Error type 3 at line %d: redefined variable '%s'.\n", child->line, child->value);
+				printf("Error type 3 at Line %d: redefined variable '%s'.\n", child->line, child->value);
 			else
-				printf("Error type 15 at line %d: redefine field '%s' in struct. \n", child->line, child->value);
+				printf("Error type 15 at Line %d: redefine field '%s' in struct. \n", child->line, child->value);
 			//YOU can add code to free memory of varType.
 			return NULL;
 		}
@@ -185,7 +184,7 @@ Type* Specifier(Node* node){
 	else{
 		ret = StructSpecifier(node->Child);
 		//TODO: TO DEBUG
-		printf("Specifier1\n");
+		// printf("Specifier1\n");
 	}
 
 	return ret;
@@ -203,7 +202,7 @@ Type* StructSpecifier(Node* node){
 			child = child->Child;
 			FieldList* varType = findVar(child->value);
 			if(varType == NULL){
-				printf("Error type 17 at line %d: undefined structure '%s'. \n", child->line, child->value);
+				printf("Error type 17 at Line %d: undefined structure '%s'. \n", child->line, child->value);
 				return NULL;
 			}
 			return varType->type;
@@ -216,7 +215,7 @@ Type* StructSpecifier(Node* node){
 			if(child->Child!=NULL){
 				//check the ID name: if it was defined before.
 				if(findVar(child->Child->value)!=NULL){
-					printf("Error type 16 at line %d: the new defined structure '%s' shares the same name of another variable. \n", child->Child->line, child->Child->value);
+					printf("Error type 16 at Line %d: the new defined structure '%s' shares the same name of another variable. \n", child->Child->line, child->Child->value);
 					return NULL;
 				}
 				
@@ -254,13 +253,14 @@ Type* StructSpecifier(Node* node){
 	}
 }
 
-FuncDef* FunDec(Node* node, Type* rtn, bool is_define){
+FuncDef* FunDec(Node* node, Type* rtn, bool is_define, int line){
 	//Create the new function node, but leave the checkment to ExtDef.
 	Node* child = node->Child;
 	FuncDef* newFunc = malloc(sizeof(FuncDef));
 	strcpy(newFunc->name, child->value);
 	newFunc->rtn = rtn;
 	newFunc->is_define = is_define;
+	newFunc->line = line;
 	
 	
 	Node* param = child->Sibling->Sibling;
@@ -352,22 +352,22 @@ Type* CompSt(Node* node, Type* rtnType){
 	Node* child = node->Child;
 	Type* rtn = NULL;
 	//TODO: TO DEBUG
-	printf("CompSt0\n");
+	// printf("CompSt0\n");
 	while(child!=NULL){
 		if(strcmp(child->type, "DefList")==0){
 			DefList(child, 1);
 			//TODO: TO DEBUG
-			printf("CompSt1\n");
-			printVarTable();
+			// printf("CompSt1\n");
+			// printVarTable();
 			//TODO: TO DEBUG
-			printf("CompSt2\n");
+			// printf("CompSt2\n");
 		}
 
 		else if(strcmp(child->type, "StmtList")==0){
 			//TODO: TO DEBUG
-			printf("CompSt3\n");
+			// printf("CompSt3\n");
 			rtn = StmtList(child, rtnType);
-			printf("CompSt4\n");
+			// printf("CompSt4\n");
 		}
 
 		child = child->Sibling;
@@ -384,9 +384,9 @@ Type* StmtList(Node* node, Type* rtnType){
 	Node* child = node->Child;
 	if(child!=NULL){
 		//TODO: TO DEBUG
-		printf("StmtList0\n");
+		// printf("StmtList0\n");
 		Type* rtn1 = Stmt(child, rtnType);
-		printf("StmtList1\n");
+		// printf("StmtList1\n");
 		child = child->Sibling;
 		Type* rtn2 = StmtList(child, rtnType);	
 		
@@ -403,9 +403,9 @@ Type* Stmt(Node* node, Type* rtnType){
 	while(child!=NULL){
 		if(strcmp(child->type, "Exp")==0){
 			//TODO: TO DEBUG
-			printf("Stmt0\n");
+			// printf("Stmt0\n");
 			Exp(child);	
-			printf("Stmt1\n");
+			// printf("Stmt1\n");
 		}
 		
 		else if(strcmp(child->type, "CompSt")==0){
@@ -419,10 +419,10 @@ Type* Stmt(Node* node, Type* rtnType){
 			Type* tempType = Exp(child);
 			if(tempType!=NULL){
 				if(tempType->kind!=BASIC || tempType->u.basic!=INTTYPE)
-					printf("Error ** at line %d: int type is expected in IF and WHILE statement. \n", child->line);
+					printf("Error ** at Line %d: int type is expected in IF and WHILE statement. \n", child->line);
 			}
 			else
-				printf("Error ** at line %d:int type is expected in IF and WHILE statement. \n", child->line);
+				printf("Error ** at Line %d:int type is expected in IF and WHILE statement. \n", child->line);
 		}
 
 		else if(strcmp(child->type, "Stmt")==0){
@@ -436,12 +436,12 @@ Type* Stmt(Node* node, Type* rtnType){
 			Type* tempType = Exp(child);
 			if(tempType!=NULL){
 				if(compareType(tempType, rtnType)==false){
-					printf("Error 8 at line %d: type mismatched for return. \n", child->line);
+					printf("Error 8 at Line %d: type mismatched for return. \n", child->line);
 				}
 				rtn = tempType;
 			}
 			else
-				printf("Error 8 at line %d: type mismatched for return. \n", child->line);
+				printf("Error 8 at Line %d: type mismatched for return. \n", child->line);
 		}
 		
 		child = child->Sibling;
@@ -462,9 +462,9 @@ FieldList* DefList(Node* node, int from){
 	//for function statements:
 	if(1==from){
 		//TODO: TO DEBUG
-		printf("DefList0\n");
+		// printf("DefList0\n");
 		Def(child, from);
-		printf("DefList1\n");
+		// printf("DefList1\n");
 		DefList(child->Sibling, from);	
 		return NULL;
 	}
@@ -475,7 +475,7 @@ FieldList* DefList(Node* node, int from){
 		if(rtn!=NULL)
 			rtn->next = DefList(child->Sibling, from);
 		else{
-		//	printf("Error 15 at line %d: duplicated defination in structure or try to assign the variable or empty structure. \n", child->line);
+		//	printf("Error 15 at Line %d: duplicated defination in structure or try to assign the variable or empty structure. \n", child->line);
 			return NULL;
 		}
 		return rtn;
@@ -493,7 +493,7 @@ FieldList* Def(Node* node, int from){
 	Node* child = node->Child;
 	Type* varType = Specifier(child);
 	//TODO: TO DEBUG
-	printf("Def1\n");
+	// printf("Def1\n");
 	
 	if(varType!=NULL){
 		child = child->Sibling;
@@ -514,12 +514,12 @@ FieldList* DecList(Node* node, Type* varType, int from){
 		while(child!=NULL){
 			if(strcmp(child->type, "Dec")==0){
 				//TODO: TO DEBUG
-				printf("DecList0\n");
+				// printf("DecList0\n");
 				FieldList* var = Dec(child, varType, 1);
 				if(var!=NULL)
 					insertVarTable(var);
 				//TODO: TO DEBUG
-				printf("DecList1\n");
+				// printf("DecList1\n");
 			}
 			
 			if(strcmp(child->type, "DecList")==0){
@@ -606,22 +606,22 @@ FieldList* Dec(Node* node, Type* varType, int from){
 	//in the function:
 	if(from==1){
 		//TODO: TO DEBUG
-		printf("Dec0\n");
-		printf("%s\n", child->type);
+		// printf("Dec0\n");
+		// printf("%s\n", child->type);
 		var = VarDec(child, varType, from);
 		//TODO: TO DEBUG
-		printf("Dec1: varType\n");
+		// printf("Dec1: varType\n");
 		
 		child = child->Sibling;
-		printf("a\n");
+		// printf("a\n");
 		if(child!=NULL){
 			child = child->Sibling;
 			assert(child!=NULL && strcmp(child->type, "Exp")==0);
 			//TODO: TO DEBUG
-			printf("Dec2\n");
+			// printf("Dec2\n");
 			Type* rightType = Exp(child);
 			if(compareType(varType, rightType)==false){
-				printf("Error type 5 at line%d: the types on both sides of '=' are not the same. \n", child->line);
+				printf("Error type 5 at Line%d: the types on both sides of '=' are not the same. \n", child->line);
 				free(var);
 				var = NULL;
 			}
@@ -657,9 +657,9 @@ Type* Exp(Node* node){
 		//case like "Exp OP Exp"
 		Type* leftType = Exp(child);
 		//TODO: TO DEBUG
-		printf("Exp0\n");
+		// printf("Exp0\n");
 		Type* rightType = Exp(child->Sibling->Sibling);
-		printf("Exp1\n");
+		// printf("Exp1\n");
 		//Used when Exp==>Exp Dot ID
 		Node* structNode = child->Child;
 		child = child->Sibling;
@@ -670,12 +670,12 @@ Type* Exp(Node* node){
 			if(leftType==NULL || rightType==NULL)
 				return NULL;
 			else if(leftType->assign == RIGHT){
-				printf("Error type 6 at line %d: The left-hand side of an assignment must be a variable, while '%s' is right-valued. \n ", child->line, structNode->value);
+				printf("Error type 6 at Line %d: The left-hand side of an assignment must be a variable, while '%s' is right-valued. \n ", child->line, structNode->value);
 				return NULL;
 			}
 
 			else if(compareType(leftType, rightType)==false){
-				printf("Error type 5 at line %d: the types on both sides of '=' is not the same. \n", child->line);
+				printf("Error type 5 at Line %d: the types on both sides of '=' is not the same. \n", child->line);
 				return NULL;
 			}
 
@@ -688,11 +688,11 @@ Type* Exp(Node* node){
 		//array:
 		else if(strcmp(child->type, "LB")==0){
 			if(rightType->kind != BASIC || rightType->u.basic!=INTTYPE){
-				printf("Error type 12 at line %d:Only int can be used as index of an array. \n", child->line);
+				printf("Error type 12 at Line %d:Only int can be used as index of an array. \n", child->line);
 				return NULL;
 			}
 			else if(leftType->kind!=ARRAY){
-				printf("Error type 10 at line %d: you cannot use '[..]' operator to a non-array variable. \n", child->line);
+				printf("Error type 10 at Line %d: you cannot use '[..]' operator to a non-array variable. \n", child->line);
 				return NULL;
 			}
 			else{
@@ -710,17 +710,17 @@ Type* Exp(Node* node){
 			assert(strcmp(structNode->type, "ID")==0);
 			FieldList* structID = findVar(structNode->value);
 			if(structID==NULL){
-				printf("Error type 1 at line %d: undefined variable '%s'. \n", structNode->line, structNode->value);
+				printf("Error type 1 at Line %d: undefined variable '%s'. \n", structNode->line, structNode->value);
 				return NULL;
 			}
 			else if(structID->type->kind != STRUCTURE){
-				printf("Error type 13 at line %d: Illegal use of '.' \n", structNode->line);
+				printf("Error type 13 at Line %d: Illegal use of '.' \n", structNode->line);
 				return NULL;
 			}
 			else{
 				Type* field = checkStructInlist(&structID->type->u.structure, child->Sibling->value);
 				if(field==NULL){
-					printf("Error type 14 at line %d: undefine field '%s'. \n", child->line, child->Sibling->value);
+					printf("Error type 14 at Line %d: undefine field '%s'. \n", child->line, child->Sibling->value);
 					return NULL;
 				}
 				else{
@@ -735,7 +735,7 @@ Type* Exp(Node* node){
 		//bool operators:
 		else if(strcmp(child->type, "AND")==0 || strcmp(child->type, "OR")==0){
 			if(leftType->kind!=BASIC || rightType->kind!=BASIC || leftType->u.basic!=INTTYPE || rightType->u.basic!=INTTYPE){
-				printf("Error ** at line %d: && || ! can only operate int type. \n", child->line);
+				printf("Error ** at Line %d: && || ! can only operate int type. \n", child->line);
 				return NULL;
 			}
 			else{
@@ -748,12 +748,12 @@ Type* Exp(Node* node){
 		else{
 			
 			if(leftType==NULL || rightType==NULL){
-				printf("Error type 7 at line %d: Type mismatched for operands. \n", child->line);
+				printf("Error type 7 at Line %d: Type mismatched for operands. \n", child->line);
 				return NULL;	
 			}
 
 			else if( leftType->kind!=BASIC || rightType->kind!=BASIC || leftType->u.basic!=rightType->u.basic){
-				printf("Error type 7 at line %d: Type mismatched for operands \n", child->line);
+				printf("Error type 7 at Line %d: Type mismatched for operands \n", child->line);
 				return NULL;
 			}
 		
@@ -768,7 +768,7 @@ Type* Exp(Node* node){
 	else if(strcmp(child->type, "MINUS")==0){
 		Type* temp = Exp(child->Sibling);
 		if(temp->kind!=BASIC){
-			printf("Error type 7 at line %d: Type mismatched for operands. \n", child->line);
+			printf("Error type 7 at Line %d: Type mismatched for operands. \n", child->line);
 			return NULL;
 		}
 		else{
@@ -780,7 +780,7 @@ Type* Exp(Node* node){
 	else if(strcmp(child->type, "NOT")==0){
 		Type* temp = Exp(child->Sibling);
 		if(temp->kind!=BASIC || temp->u.basic == INTTYPE){
-			printf("Error ** at line %d: expect int type for operator '!'. \n", child->line);
+			printf("Error ** at Line %d: expect int type for operator '!'. \n", child->line);
 			return NULL;
 		}
 		else{
@@ -794,7 +794,7 @@ Type* Exp(Node* node){
 		if(child->Sibling==NULL){
 			FieldList* var = findVar(child->value);
 			if(var==NULL){
-				printf("Error type 1 at line %d: undefined variable '%s'. \n", child->line, child->value);
+				printf("Error type 1 at Line %d: undefined variable '%s'. \n", child->line, child->value);
 				return NULL;
 			}
 			else{
@@ -809,13 +809,13 @@ Type* Exp(Node* node){
 			if(func==NULL){
 				FieldList* temp = findVar(child->value);
 				if(temp==NULL)
-					printf("Error type 2 at line %d: undefined function '%s'. \n", child->line, child->value);
+					printf("Error type 2 at Line %d: undefined function '%s'. \n", child->line, child->value);
 				else
-					printf("Error type 11 at line %d: %s is not a function. \n", child->line, child->value);
+					printf("Error type 11 at Line %d: %s is not a function. \n", child->line, child->value);
 				return NULL;
 			}
 			else if(func->is_define == false) {
-				printf("Error type 18 at line %d: function declarated but not defined '%s'. \n", child->line, child->value);
+				printf("Error type 18 at Line %d: function declarated but not defined '%s'. \n", child->line, child->value);
 			}
 			Node* third = child->Sibling->Sibling;
 			assert(third!=NULL);
@@ -823,7 +823,7 @@ Type* Exp(Node* node){
 			// function without arguments:
 			if(strcmp(third->type, "RP")==0){
 				if(func->param!=NULL){
-					printf("Error type 9 at line %d: Function '%s' mismatched for arguments. \n", third->line, func->name);
+					printf("Error type 9 at Line %d: Function '%s' mismatched for arguments. \n", third->line, func->name);
 					return NULL;
 				}
 				else{
@@ -837,7 +837,7 @@ Type* Exp(Node* node){
 			// third is args:
 			else{
 				if(Args(third, func->param)==false){
-					printf("Error type 9 at line %d: Function '%s' mismatched for arguments. \n", third->line, func->name);
+					printf("Error type 9 at Line %d: Function '%s' mismatched for arguments. \n", third->line, func->name);
 					return NULL;
 				}
 				else{

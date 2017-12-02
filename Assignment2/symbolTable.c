@@ -205,13 +205,13 @@ bool compareFunc(FuncDef *func1, FuncDef *func2) {
 	else if(compareType(func1->rtn, func2->rtn) == false)
 		return false;
 	// TODO: TO DEBUG
-	printf("COMP_FUNC type same \n");
+	// printf("COMP_FUNC type same \n");
 	FieldList *param1 = func1->param;
 	FieldList *param2 = func2->param;
 	if(param1 == NULL && param2 == NULL)
 		return true;
 	// TODO: TO DEBUG
-	printf("before while \n");
+	// printf("before while \n");
 
 	while(param1 != NULL && param2 != NULL) {
 		// TODO: TO DEBUG
@@ -222,7 +222,7 @@ bool compareFunc(FuncDef *func1, FuncDef *func2) {
 		else if(compareType(param1->type, param2->type) == false)
 			return false;
 		// TODO: TO DEBUG
-		printf("COMP_FUNC param same \n");
+		// printf("COMP_FUNC param same \n");
 		param1 = param1->next, param2 = param2->next;
 		if(param1 == NULL && param2 == NULL)
 			return true;
@@ -236,6 +236,7 @@ void freeFieldList(FieldList* head){
 		head = head->next;
 		free(temp);
 	}
+
 }
 
 FieldList* getFieldListTail(FieldList* head){

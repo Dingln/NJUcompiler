@@ -17,7 +17,7 @@ void ExtDecList(Node* node, Type* varType);
 
 FieldList* VarDec(Node* node, Type* varType, int from);
 FieldList* DefList(Node* node, int from);
-FuncDef* FunDec(Node* node, Type* rtn, bool is_define);
+FuncDef* FunDec(Node* node, Type* rtn, bool is_define, int line);
 FieldList* VarList(Node* node, bool is_define);
 FieldList* ParamDec(Node* node, bool is_define);
 Type* CompSt(Node* node, Type* rtnType);

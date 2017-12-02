@@ -49,6 +49,7 @@ typedef struct FuncDef_{
 	Type* rtn;
 	FieldList* param;
 	bool is_define;
+	int line;
 	struct FuncDef_* next;
 }FuncDef;	//use a linklist to store defination or declaration of function
 
