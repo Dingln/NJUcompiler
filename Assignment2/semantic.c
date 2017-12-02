@@ -8,10 +8,12 @@ void Program(Node* root){
 		ExtDefList(root->Child);
 	}
 	//TODO: YOU MAY NEED TO CHECK FUNCLIST HERE.
-	while(FuncList != NULL) {
-		if(FuncList->is_define == false)
-			printf("Error type 18 at Line %d: function declarated but not defined '%s'. \n", FuncList->line, FuncList->name);
-		FuncList = FuncList->next;
+	FuncDef *p = FuncList;
+	while(p != NULL) {
+		if(p->is_define == false) {
+			printf("Error type 18 at Line %d: function declarated but not defined '%s'. \n", p->line, p->name);
+		}
+		p = p->next;
 	}
 
 }
@@ -78,9 +80,29 @@ void ExtDef(Node* node){
 					free(newFunc);
 					return;
 				}
+				else {
+					FuncDef *pre = FuncList;
+					if(pre == temp) {
+						newFunc->next = FuncList->next;
+						FuncList = newFunc;
+					}
+					else {
+						// TODO: TO DEBUG
+						printf("before while \n");
+						while(pre->next != temp)
+							pre = pre->next;
+						// TODO: TO DEBUG
+						printf("after while \n");
+						pre->next = newFunc;
+						newFunc->next = temp->next;
+					}
+					free(temp);
+					// TODO: TO DEBUG
+					printFuncList();
+				}
 
 			}
-			insertFunc(newFunc);
+			else insertFunc(newFunc);
 		}
 		//declaration
 		else {
@@ -357,10 +379,10 @@ Type* CompSt(Node* node, Type* rtnType){
 		if(strcmp(child->type, "DefList")==0){
 			DefList(child, 1);
 			//TODO: TO DEBUG
-			// printf("CompSt1\n");
-			// printVarTable();
+			 printf("CompSt1\n");
+			 printVarTable();
 			//TODO: TO DEBUG
-			// printf("CompSt2\n");
+			 printf("CompSt2\n");
 		}
 
 		else if(strcmp(child->type, "StmtList")==0){
