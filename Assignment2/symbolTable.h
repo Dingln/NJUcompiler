@@ -48,6 +48,7 @@ typedef struct FuncDef_{
 	char name[50];
 	Type* rtn;
 	FieldList* param;
+	bool is_define;
 	struct FuncDef_* next;
 }FuncDef;	//use a linklist to store defination or declaration of function
 
@@ -57,6 +58,7 @@ extern FuncDef* FuncList;
 extern FieldList* Stack[MAX_EMBEDDED];
 extern int StackLevel;
 
+bool compareFunc(FuncDef *func1, FuncDef *func2);
 bool compareFieldList(FieldList* node1, FieldList* node2);
 bool compareType(Type* node1, Type* node2);
 bool Compare_StructureType(Type* node1, Type* node2);

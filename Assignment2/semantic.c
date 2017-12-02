@@ -45,27 +45,58 @@ void ExtDef(Node* node){
 		return;
 	}
 
-	//functions defination:
+	//functions defination and declaration:
 	else if(strcmp(child->type, "FunDec")==0){
-		FuncDef* newFunc = FunDec(child, varType);
-		//TODO: TO DEBUG
-		printFuncDef(newFunc);
-		printf("ExtDef1\n");
-		Type* rtnType = CompSt(child->Sibling, varType);
-		//TODO: TO DEBUG
-		printf("ExtDef2\n");
+		//defination
+		if(strcmp(child->Sibling->type, "CompSt") == 0) {
+			FuncDef* newFunc = FunDec(child, varType, true);
+			//TODO: TO DEBUG
+			printFuncDef(newFunc);
+			printf("ExtDef1\n");
+			Type* rtnType = CompSt(child->Sibling, varType);
+			//TODO: TO DEBUG
+			printf("ExtDef2\n");
 
-		if(rtnType==NULL){
-			printf("Error type 8 at line %d: no return statement in function '%s'. \n", child->line, newFunc->name);
+			if(rtnType==NULL){
+				printf("Error type 8 at line %d: no return statement in function '%s'. \n", child->line, newFunc->name);
+			}
+
+			FuncDef *temp = findFunc(newFunc->name);
+			if(temp != NULL){
+				if(temp->is_define == true) {
+					printf("Error type 4 at line %d: redefined function '%s'. \n", child->line, newFunc->name);
+					free(newFunc);
+					return;
+				}
+				//TODO: constant declaration
+				else if(compareFunc(temp, newFunc) == false) {
+					printf("Error type 19 at line %d: declaration or defination of '%s' function conflicts. \n", child->line, newFunc->name);
+					free(newFunc);
+					return;
+				}
+
+			}
+			insertFunc(newFunc);
+		}
+		//declaration
+		else {
+			FuncDef* newFunc = FunDec(child, varType, false);
+			FuncDef *temp = findFunc(newFunc->name);
+			if(temp != NULL){
+				printf("BEGIN\n");
+				//TODO: constant declaration
+				if(compareFunc(temp, newFunc) == false) {
+					printf("Error type 19 at line %d: function declaration or defination conficted '%s'. \n", child->line, newFunc->name);
+					free(newFunc);
+					return;
+				}
+			}
+			insertFunc(newFunc);
 		}
 
-		if(findFunc(newFunc->name)!=NULL){
-			printf("Error type 4 at line %d: redefined function '%s'. \n", child->line, newFunc->name);
-			free(newFunc);
-			return;
-		}
+	
 
-		insertFunc(newFunc);
+		
 		//TODO: TO DEBUG
 		printFuncList();
 	}
@@ -223,40 +254,43 @@ Type* StructSpecifier(Node* node){
 	}
 }
 
-FuncDef* FunDec(Node* node, Type* rtn){
+FuncDef* FunDec(Node* node, Type* rtn, bool is_define){
 	//Create the new function node, but leave the checkment to ExtDef.
 	Node* child = node->Child;
 	FuncDef* newFunc = malloc(sizeof(FuncDef));
 	strcpy(newFunc->name, child->value);
 	newFunc->rtn = rtn;
+	newFunc->is_define = is_define;
+	
 	
 	Node* param = child->Sibling->Sibling;
 	if(strcmp(param->type, "VarList")==0){
-		newFunc->param = VarList(param);
+		newFunc->param = VarList(param, is_define);
 	}
 	else
 		newFunc->param = NULL;
 	
+	
 	return newFunc;
 }
 
-FieldList* VarList(Node* node){
+FieldList* VarList(Node* node, bool is_define){
 	FieldList* param = NULL;
 	Node* child = node->Child;
 	while(child!=NULL){
 		if(strcmp(child->type, "ParamDec")==0){
-			param = ParamDec(child);
+			param = ParamDec(child, is_define);
 			
 		}
 		
 		else if(strcmp(child->type, "VarList")==0){
 			if(param==NULL)
-				param = VarList(child);
+				param = VarList(child, is_define);
 			else{
 				FieldList* temp = param;
 				while(temp->next!=NULL)
 					temp = temp->next;
-				temp->next = VarList(child);
+				temp->next = VarList(child, is_define);
 			}
 		}
 		
@@ -265,7 +299,7 @@ FieldList* VarList(Node* node){
 	return param;
 }
 
-FieldList* ParamDec(Node* node){
+FieldList* ParamDec(Node* node, bool is_define){
 	Node* child = node->Child;
 	assert(strcmp(child->type, "Specifier")==0);
 	
@@ -282,7 +316,8 @@ FieldList* ParamDec(Node* node){
 	else{
 		FieldList* arg_i = malloc(sizeof(FieldList));
 		memcpy(arg_i, arg_r, sizeof(FieldList));
-		insertVarTable(arg_i);
+		if(is_define == true)
+			insertVarTable(arg_i);
 		return arg_r;
 	}
 }
@@ -778,6 +813,9 @@ Type* Exp(Node* node){
 				else
 					printf("Error type 11 at line %d: %s is not a function. \n", child->line, child->value);
 				return NULL;
+			}
+			else if(func->is_define == false) {
+				printf("Error type 18 at line %d: function declarated but not defined '%s'. \n", child->line, child->value);
 			}
 			Node* third = child->Sibling->Sibling;
 			assert(third!=NULL);
