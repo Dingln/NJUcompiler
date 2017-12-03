@@ -178,9 +178,9 @@ bool compareType(Type* node1, Type* node2){
 }
 
 bool Compare_StructureType(Type* node1, Type* node2) {
-	if(strcmp(node1->u.structure.name, node2->u.structure.name) == 0)
-		return true;
-	else {
+	// if(strcmp(node1->u.structure.name, node2->u.structure.name) == 0)
+	// 	return true;
+	// else {
 		struct FieldList_ *list1, *list2;
 		list1 = node1->u.structure.inList;
 		list2 = node2->u.structure.inList;
@@ -195,7 +195,7 @@ bool Compare_StructureType(Type* node1, Type* node2) {
 		if(list1 == NULL && list2 == NULL)
 			return true;
 //		return false;
-	}
+	// }
 	return false;
 }
 
@@ -249,9 +249,9 @@ FieldList* getFieldListTail(FieldList* head){
 	return temp;
 }
 
-Type* checkStructInlist(Structure* s, char* name){
+Type* checkStructInlist(FieldList* s, char* name){
 	//check if the field contained in structure
-	FieldList* head = s->inList;
+	FieldList* head = s;
 	while(head!=NULL){
 		if(strcmp(head->name, name)==0)
 			return head->type;
@@ -266,6 +266,18 @@ void printFieldList(FieldList* var){
 	printf("%s:", var->name);
 	assert(var->type!=NULL);
 	printf("kind%d==>", var->type->kind);	
+}
+
+void printInList(FieldList* inList){
+	printf("Struct inList: ");
+	while(inList!=NULL){
+		printf("%s:", inList->name);
+		if(inList->type!=NULL)
+			printf("kind%d", inList->type->kind);
+		printf("==>");
+		inList = inList->next;
+	}
+	printf("NULL\n");
 }
 
 void printVarTable(){

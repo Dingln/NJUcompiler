@@ -88,17 +88,17 @@ void ExtDef(Node* node){
 					}
 					else {
 						// TODO: TO DEBUG
-						printf("before while \n");
+						//printf("before while \n");
 						while(pre->next != temp)
 							pre = pre->next;
 						// TODO: TO DEBUG
-						printf("after while \n");
+						//printf("after while \n");
 						pre->next = newFunc;
 						newFunc->next = temp->next;
 					}
 					free(temp);
 					// TODO: TO DEBUG
-					printFuncList();
+					//printFuncList();
 				}
 
 			}
@@ -109,7 +109,7 @@ void ExtDef(Node* node){
 			FuncDef* newFunc = FunDec(child, varType, false, child->line);
 			FuncDef *temp = findFunc(newFunc->name);
 			if(temp != NULL){
-				printf("BEGIN\n");
+				// printf("BEGIN\n");
 				if(compareFunc(temp, newFunc) == false) {
 					printf("Error type 19 at Line %d: function declaration or defination conficted '%s'. \n", child->line, newFunc->name);
 					free(newFunc);
@@ -227,12 +227,18 @@ Type* StructSpecifier(Node* node){
 				printf("Error type 17 at Line %d: undefined structure '%s'. \n", child->line, child->value);
 				return NULL;
 			}
+			else if(varType->kind!=STRUCTURETYPE){
+				printf("Error type 17 at Line %d: '%s' is not a structure type. \n", child->line, child->value);
+				return NULL;
+			}
 			return varType->type;
 		}
 
 		else if(strcmp(child->type, "OptTag")==0){
 			rtn = malloc(sizeof(Type));
-			FieldNode = malloc(sizeof(FieldList));
+			rtn->kind = STRUCTURE;
+			FieldNode = malloc(sizeof(FieldList)); //node to insert VarTable
+			FieldNode->kind = STRUCTURETYPE;
 
 			if(child->Child!=NULL){
 				//check the ID name: if it was defined before.
@@ -241,12 +247,14 @@ Type* StructSpecifier(Node* node){
 					return NULL;
 				}
 				
-				rtn->kind = STRUCTURE;
 			//	rtn->u.structure = malloc(sizeof(Structure));
 				strcpy(rtn->u.structure.name, child->Child->value);
 				strcpy(FieldNode->name, child->Child->value);
 				FieldNode->type = rtn;
+				//insert to varTable now for recursive defination.	
+				insertVarTable(FieldNode);
 			}
+
 			else{
 				//struct without name, needn't add to VarTable:
 				strcpy(rtn->u.structure.name, "\0");
@@ -256,18 +264,24 @@ Type* StructSpecifier(Node* node){
 
 		else if(strcmp(child->type, "DefList")==0){
 			rtn->u.structure.inList = DefList(child, 2);
-			if(rtn->u.structure.inList==NULL){
-				//printf("Error 15 at line %d: duplicated defination in structure or try to assign the variable or empty structure. \n", child->Child->line);
-				free(rtn); free(FieldNode);
-				return NULL;
-			}
+			return rtn;
+	
+			/*
 			if(rtn->u.structure.name[0]=='\0'){
 				return rtn;
 			}
+			
+			else if(rtn->u.structure.inList==NULL){
+				//printf("Error 15 at line %d: duplicated defination in structure or try to assign the variable or empty structure. \n", child->Child->line);
+				//free(rtn); free(FieldNode);
+				insertVarTable(FieldNode);
+				return NULL;
+			}
+			
 			else{
 				insertVarTable(FieldNode);
 				return rtn;
-			}
+			}*/
 		}
 
 		child = child->Sibling;
@@ -379,10 +393,10 @@ Type* CompSt(Node* node, Type* rtnType){
 		if(strcmp(child->type, "DefList")==0){
 			DefList(child, 1);
 			//TODO: TO DEBUG
-			 printf("CompSt1\n");
-			 printVarTable();
+			// printf("CompSt1\n");
+			// printVarTable();
 			//TODO: TO DEBUG
-			 printf("CompSt2\n");
+			// printf("CompSt2\n");
 		}
 
 		else if(strcmp(child->type, "StmtList")==0){
@@ -458,12 +472,17 @@ Type* Stmt(Node* node, Type* rtnType){
 			Type* tempType = Exp(child);
 			if(tempType!=NULL){
 				if(compareType(tempType, rtnType)==false){
-					printf("Error 8 at Line %d: type mismatched for return. \n", child->line);
+					printf("Error type 8 at Line %d: type mismatched for return. \n", child->line);
 				}
 				rtn = tempType;
 			}
-			else
-				printf("Error 8 at Line %d: type mismatched for return. \n", child->line);
+			else{
+				//we have to malloc for rtn, to make outer layers know there
+				//is 'return' statement in the function.
+				rtn = malloc(sizeof(Type));
+				rtn->kind = UNKNOWN;
+				printf("Error type 8 at Line %d: type mismatched for return. \n", child->line);
+			}
 		}
 		
 		child = child->Sibling;
@@ -494,8 +513,12 @@ FieldList* DefList(Node* node, int from){
 	//for structure defination
 	else if(2==from){
 		rtn = Def(child, from);
-		if(rtn!=NULL)
-			rtn->next = DefList(child->Sibling, from);
+		if(rtn!=NULL){
+			FieldList* temp = rtn;
+			while(temp->next!=NULL)
+				temp = temp->next;
+			temp->next = DefList(child->Sibling, from);
+		}
 		else{
 		//	printf("Error 15 at Line %d: duplicated defination in structure or try to assign the variable or empty structure. \n", child->line);
 			return NULL;
@@ -661,9 +684,8 @@ FieldList* Dec(Node* node, Type* varType, int from){
 			return var;
 		else{
 			//try to assign the variable in structure, msg is given in DefList
-			//printf("Error 15 at line %d: duplicated defination in structure or try to assign the variable or empty structure. \n", child->line);
-			free(var);
-			return NULL;
+			printf("Error type 15 at line %d: try to assign the field in structure defination. \n", child->line);
+			return var;
 		}
 	}
 	else
@@ -683,7 +705,7 @@ Type* Exp(Node* node){
 		Type* rightType = Exp(child->Sibling->Sibling);
 		// printf("Exp1\n");
 		//Used when Exp==>Exp Dot ID
-		Node* structNode = child->Child;
+		Node* leftNode = child;
 		child = child->Sibling;
 	
 
@@ -692,7 +714,7 @@ Type* Exp(Node* node){
 			if(leftType==NULL || rightType==NULL)
 				return NULL;
 			else if(leftType->assign == RIGHT){
-				printf("Error type 6 at Line %d: The left-hand side of an assignment must be a variable, while '%s' is right-valued. \n ", child->line, structNode->value);
+				printf("Error type 6 at Line %d: The left-hand side of an assignment must be a variable, while '%s' is right-valued. \n ", child->line, leftNode->Child->value);
 				return NULL;
 			}
 
@@ -709,7 +731,10 @@ Type* Exp(Node* node){
 		
 		//array:
 		else if(strcmp(child->type, "LB")==0){
-			if(rightType->kind != BASIC || rightType->u.basic!=INTTYPE){
+			if(leftType==NULL){
+				return NULL;
+			}
+			else if(rightType->kind != BASIC || rightType->u.basic!=INTTYPE){
 				printf("Error type 12 at Line %d:Only int can be used as index of an array. \n", child->line);
 				return NULL;
 			}
@@ -729,29 +754,52 @@ Type* Exp(Node* node){
 		//structure field:
 		else if(strcmp(child->type, "DOT")==0){
 			//Node* structNode = child->Child;
-			assert(strcmp(structNode->type, "ID")==0);
-			FieldList* structID = findVar(structNode->value);
-			if(structID==NULL){
-				printf("Error type 1 at Line %d: undefined variable '%s'. \n", structNode->line, structNode->value);
-				return NULL;
-			}
-			else if(structID->type->kind != STRUCTURE){
-				printf("Error type 13 at Line %d: Illegal use of '.' \n", structNode->line);
-				return NULL;
-			}
-			else{
-				Type* field = checkStructInlist(&structID->type->u.structure, child->Sibling->value);
-				if(field==NULL){
-					printf("Error type 14 at Line %d: undefine field '%s'. \n", child->line, child->Sibling->value);
+			//assert(strcmp(structNode->type, "ID")==0);
+			/*if(strcmp(structNode->type, "ID")==0){
+				FieldList* structID = findVar(structNode->value);
+				if(structID==NULL){
+					printf("Error type 1 at Line %d: undefined variable '%s'. \n", structNode->line, structNode->value);
+					return NULL;
+				}
+				else if(structID->type->kind != STRUCTURE){
+					printf("Error type 13 at Line %d: Illegal use of '.' \n", structNode->line);
 					return NULL;
 				}
 				else{
-					Type* rtn = malloc(sizeof(Type));
-					memcpy(rtn, field, sizeof(Type));
-					rtn->assign = BOTH;
-					return rtn;
+					Type* field = checkStructInlist(&structID->type->u.structure.inList, child->Sibling->value);
+					//TODO: TO DEBUG
+					//printInList(structID->type->u.structure.inList);
+	
+					if(field==NULL){
+						printf("Error type 14 at Line %d: undefine field '%s'. \n", child->line, child->Sibling->value);
+						return NULL;
+					}
+					else{
+						Type* rtn = malloc(sizeof(Type));
+						memcpy(rtn, field, sizeof(Type));
+						rtn->assign = BOTH;
+						return rtn;
+					}
 				}
+			}*/
+
+			Type* structType = Exp(leftNode);
+			if(structType->kind!=STRUCTURE){
+				printf("Error type 13 at Line %d: Illegal use of '.' \n", leftNode->Child->line);
+				return NULL;
 			}
+			Type* field = checkStructInlist(structType->u.structure.inList, child->Sibling->value);
+			if(field==NULL){
+				printf("Error type 14 at Line %d: undefine field '%s'. \n", child->line, child->Sibling->value);
+				return NULL;
+			}
+			else{
+				Type* rtn = malloc(sizeof(Type));
+				memcpy(rtn, field, sizeof(Type));
+				rtn->assign = BOTH;
+				return rtn;
+			}
+
 		}
 
 		//bool operators:

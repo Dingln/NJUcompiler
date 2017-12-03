@@ -37,6 +37,8 @@ typedef struct Type_{
 
 typedef struct FieldList_{
 	char name[32];
+	enum {VARIABLE, STRUCTURETYPE} kind;
+
 	Type* type;							//type of the area;
 	struct FieldList_ *pre;			//for convenience of delete
 	struct FieldList_ *next;	        //next node of hash table;
@@ -67,7 +69,7 @@ int calcHashIndex(char* str);
 void freeFieldList(FieldList* head);
 FieldList* getFieldListTail(FieldList* head);
 //to find if the structure contains field named 'name'
-Type* checkStructInlist(Structure* s, char* name);
+Type* checkStructInlist(FieldList* s, char* name);
 
 //interface of VarTable:
 void initVarTable();
@@ -83,6 +85,7 @@ void printFieldList(FieldList* var);
 void printVarTable();
 void printFuncDef(FuncDef* f);
 void printFuncList();
+void printInList(FieldList* inList);
 
 //interface of Stack:
 void initStack();
