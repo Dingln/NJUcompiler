@@ -61,7 +61,7 @@ void printIR(char *filename)
     }
     else {
         InterCode p = IRhead;
-        while(p != IRtail) {
+        while(p->next != IRhead) {
             switch(p->kind) {
                 case ASSIGN: 
                     printOperand(p->u.assign.left, fp);
@@ -121,10 +121,54 @@ void printIR(char *filename)
                     fprintf(fp, "ARG ");
                     printOperand(p->u.sigop.op, fp);
                     break;
+                case PARAM:
+                    fprintf(fp, "PARAM ");
+                    printOperand(p->u.sigop.op, fp);
+                    break;
                 case IFOP:
-                    
-
+                    fprintf(fp, "IF ");
+                    printOperand(p->u.ifop.op1, fp);
+                    fprintf(fp, " %s ", p->u.ifop.relop);
+                    printOperand(p->u.ifop->op2, fp);
+                    fprintf(fp, " GOTO ");
+                    printOperand(p->u.ifop.label, fp);
+                    break;
+                case CALL:
+                    printOperand(p->u.callop.result, fp);
+                    fprintf(fp, " := CALL ");
+                    fprintf(fp, "%s", p->u.callop.name);
+                    break;
+                case FUNCTION:
+                    fprintf(fp, "FUNCTION %s :", p->u.funop.name);
+                    break;
+                case DEC:
+                    fprintf(fp, "DEC ");
+                    printOperand(p->u.decop.op,fp);
+                    printOperand(p->u.decop.size,fp);
+                    break;
+                default:
+                    fprintf(fp, "Unknown IR type!\n");
             }
+            fprintf(fp, "\n");
+            p = p->next;
         }
     }
+    fclose(fp);
+}
+
+void printOperand(Operand op, FILE *fp)
+{
+    if(op == NULL)
+        return;
+    switch(op->kind) {
+        case CONSTANT: fprintf(fp, "#%d", op->u.value); break;
+        case VARIABLE: fprintf(fp, "v%d", op->u.var_no); break;
+        case ADDRESS: fprintf(fp, "&%d", op->u.var_no); break;
+        case TEMP: fprintf(fp, "t%d", op->u.var_no); break;
+        case LABEL: fprintf(fp, "label%d", op->u.var_no); break;
+        case VPOINTER: fprintf(fp, "*v%d", op->u.var_no); break;
+        case TPOINTER: fprintf(fp, "*t%d", op->u.var_no); break;
+        default: fprintf(fp, "Unknown operand!\n");
+    }
+
 }
