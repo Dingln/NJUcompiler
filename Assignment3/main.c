@@ -4,6 +4,8 @@
 #include "syntax.tab.h"
 #include "symbolTable.h"
 #include "semantic.h"
+#include "IR.h"
+#include "IRtranslate.h"
 
 extern int LexErrorFlag;
 extern int SynErrorFlag;
@@ -24,8 +26,10 @@ int main(int argc, char** argv){
 	yyparse();
 
 	if(LexErrorFlag==1 && SynErrorFlag==1){
-//		traversal(root, 0);
+		traversal(root, 0);
 		Program(root);
+		translate_Program(root);
+		printIR("intercode.txt");
 	}
 
 //	else

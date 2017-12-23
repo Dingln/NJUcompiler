@@ -420,6 +420,7 @@ InterCode translate_Exp(Node *node, Operand place)
                 return createCallop(CALL, place, myfunc);
             }
 
+    // Exp__ID_LP_Args_RP
     else if( strcmp(child->type, "ID") == 0  && 
              strcmp(child->Sibling->Sibling->type, "Args") == 0) {
                 
@@ -435,12 +436,141 @@ InterCode translate_Exp(Node *node, Operand place)
                     return IRcodeConcat(2, code1, tempcode1);
                 }
 
-                
+                InterCode code2 = NULL;
+                Operand *p = arglist->next;
+                for(; p != NULL; p = p->next){
+                    InterCode tempcode = createSigop(ARG, p);
+                    code2 = IRcodeConcat(2, code2, tempcode);
+                }
+                InterCode callcode = createCallop(CALL, place, myfunc);
 
-
+                return IRcodeConcat(3, code1, code2, callcode);
             }
-            
-
-
-
+    
+    // Exp__Exp_DOT_ID
+    else {
+        return NULL;
+    }         
 }
+
+InterCode translate_Args(Node *node, Operand arg_list)
+{
+    if(node == NULL)
+        return NULL;
+
+    Node *child = node->Child;
+
+    // Args__Exp
+    if(strcmp(child->Sibling == NULL)) {
+        Node *node_exp = child;
+        
+        InterCode t1 = createTemp();
+        InterCode code1 = translate_Exp(node_exp, t1);
+        
+        // Arg concat
+        if(arg_list == NULL) {
+            arg_list = t1;
+            arg_list->next = NULL;
+        }
+        else {
+            t1->next = arg_list;
+            arg_list = t1;
+        }
+
+        return code1;
+    }
+
+    // Args__Exp_COMMA_Args
+    else {
+        Node *node_exp = child;
+        Node *node_arg = node_exp->Sibling->Sibling;
+
+        InterCode t1 = createTemp();
+        InterCode code1 = translate_Exp(node_exp, t1);
+
+        // Arg concat
+        if(arg_list == NULL) {
+            arg_list = t1;
+            arg_list->next = NULL;
+        }
+        else {
+            t1->next = arg_list;
+            arg_list = t1;
+        }
+
+        InterCode code2 = translate_Args(node_arg, arg_list);
+
+        return IRcodeConcat(2, code1, code2);
+    }
+}
+
+InterCode translate_Cond(Node *node, Operand label_true, Operand label_false)
+{
+    if(node == NULL)
+        return NULL;
+
+    Node *child = node->Child;
+    Node *child2 = child->Sibling;
+
+    // Exp__NOT_Exp
+    if(strcmp(child->type, "NOT") == 0) {
+        Node *node_exp = child2;
+        return translate_Cond(node_exp, label_false, label_true);
+    }
+
+    // Exp__Exp_RELOP_Exp
+    else if(strcmp(child2->type, "RELOP") == 0) {
+        Node *node_exp1 = child;
+        Node *node_relop = child2;
+        NOde *node_exp2 = child2->Sibling;
+        
+        Operand t1 = createTemp();
+        Operand t2 = createTemp();
+        InterCode code1 = translate_Exp(node_exp1, t1);
+        InterCode code2 = translate_Exp(node_exp2, t2);
+
+        char *op = node_relop->value;
+        InterCode code3 = createIfop(IFOP, t1, t2, label_true, op);
+        InterCode gotocode = createSigop(GOTO, label_false);
+
+        return IRcodeConcat(4, code1, code2, code3, gotocode);
+    }
+
+    // Exp__Exp_AND_Exp
+    else if(strcmp(child2->type, "AND") == 0) {
+        Node *node_exp1 = child;
+        Node *node_exp2 = child2->Sibling;
+
+        Operand label1 = createLable();
+        InterCode code1 = translate_Cond(node_exp1, label1, label_false);
+        InterCode code2 = translate_Cond(node_exp2, label_true, label_false);
+        InterCode labelcode = createSigop(LABEL, label1);
+
+        return IRcodeConcat(3, code1, labelcode, code2);
+    }
+
+    // Exp__Exp_OR_Exp
+    else if(strcmp(child2->type, "OR") == 0) {
+        Node *node_exp1 = child;
+        Node *node_exp2 = child2->Sibling;
+
+        Operand label1 = createLable();
+        InterCode code1 = translate_Cond(node_exp1, label_true, label1);
+        InterCode code2 = translate_Cond(node_exp2, label_true, label_false);
+        InterCode labelcode = createSigop(LABEL, label1);
+
+        return IRcodeConcat(3, code1, labelcode, code2);
+    }
+
+    // others
+    else {
+        Operand t1 = createTemp();
+        InterCode code1 = translate_Exp(node, t1);
+        InterCode code2 = createIfop(IF, t1, constant_0, label_true, "!=");
+        InterCode gotocode = createSigop(GOTO, label_false);
+
+        return IRcodeConcat(3, code1, code2, gotocode);
+    }
+}
+
+
