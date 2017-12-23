@@ -2,9 +2,11 @@
 #include"stdio.h"
 #include"string.h"
 #include"IR.h"
+#include"stdarg.h"
 
-int varCount=1;
-int labelCount=1;
+int varCount = 1;
+int tempCount = 1;
+int labelCount = 1;
 
 InterCode IRhead = NULL;
 InterCode IRtail = NULL;
@@ -171,4 +173,143 @@ void printOperand(Operand op, FILE *fp)
         default: fprintf(fp, "Unknown operand!\n");
     }
 
+}
+
+Operand createOperand(OperandKind kind, int val)
+{
+    Operand newOp = (Operand)malloc(sizeof(Operand));
+    newOp->kind = kind;
+    switch(newOp->kind) {
+        case CONSTANT: newOp->u.value = val; break;
+        case ADDRESS:
+        case VPOINTER:
+        case TPOINTER: newOp->u.var_no = val; break;
+        case TEMP: 
+            newOp->u.var_no = val;
+            tempCount++;
+            break;
+        case LABEL:
+            newOp->u.var_no = val;
+            labelCount++;
+            break;
+        case VARIABLE:
+            newOp->u.var_no = val;
+            varCount++;
+            break;
+        default: printf("Unknown operand!\n");
+    }
+    return newOp;
+}
+
+Operand createTemp()
+{   
+    Operand newtemp = (Operand)malloc(sizeof(Operand));
+    newtemp->kind = TEMP;
+    newtemp->u.var_no = tempCount;
+    tempCount++;
+    return newtemp;
+}
+
+Operand createLable()
+{
+    Operand newlable = (Operand)malloc(sizeof(Operand));
+    newlable->kind = LABEL;
+    newlable->u.var_no = labelCount;
+    labelCount++;
+    return newlable;
+}
+
+InterCode IRcodeConcat(int num, ...)
+{
+    InterCode IRtemphead = NULL, IRtemptail = NULL;
+    va_list myarg;
+    va_start(myarg, num);
+    for(int i = 0; i < num; i++) {
+        InterCode code = va_arg(myarg, InterCode);
+        if(IRtemphead == NULL) {
+            IRtemphead = code;
+            IRtemptail = IRtemphead;
+            while(IRtemptail->next != NULL)
+                IRtemptail = IRtemptail->next;
+        }
+        else {
+            IRtemptail->next = code;
+            code->pre = IRtemptail;
+            while(IRtemptail->next != NULL)
+                IRtemptail = IRtemptail->next;
+        }
+    }
+    va_end(myarg);
+    return IRtemphead;
+}
+
+InterCode createAssign(IRKind kind, Operand left, Operand right) 
+{
+    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    ircode->kind = kind;
+    ircode->u.assign.left = left;
+    ircode->u.assign.right = right;
+    ircode->pre = ircode->next = NULL;
+    return ircode;
+}
+
+InterCode createBinop(IRKind kind, Operand result, Operand op1, Operand op2)
+{
+    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    ircode->kind = kind;
+    ircode->u.binop.op1 = op1;
+    ircode->u.binop.op2 = op2;
+    ircode->u.binop.result = result;
+    ircode->pre = ircode->next = NULL;
+    return ircode;
+}
+
+InterCode createSigop(IRKind kind, Operand op)
+{
+    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    ircode->kind = kind;
+    ircode->u.sigop.op = op;
+    ircode->pre = ircode->next = NULL;
+    return ircode;
+}
+
+InterCode createIfop(IRKind kind, Operand op1, Operand op2, Operand label, char *relop)
+{
+    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    ircode->kind = kind;
+    ircode->u.ifop.label = label;
+    ircode->u.ifop.op1 = op1;
+    ircode->u.ifop.op2 = op2;
+    strcpy(ircode->u.ifop.relop, relop);
+    ircode->pre = ircode->next = NULL;
+    return ircode;
+}
+
+InterCode createFunop(IRKind kind, char *name)
+{
+    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    ircode->kind = kind;
+    strcpy(ircode->u.funop.name, name);
+    ircode->pre = ircode->next = NULL;
+    return ircode;
+}
+
+InterCode createCallop(IRKind kind, Operand result, char *name)
+{
+    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    ircode->kind = kind;
+    ircode->u.callop.result = result;
+    strcpy(ircode->u.callop.name, name);
+    ircode->pre = ircode->next = NULL;
+    return ircode;
+}
+
+InterCode createDecop(IRKind kind, Operand op, int size)
+{
+    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    ircode->kind = kind;
+    ircode->u.decop.op = op;
+    ircode->u.decop.size = size;
+    ircode->pre = ircode->next = NULL;
+    return ircode;
 }
