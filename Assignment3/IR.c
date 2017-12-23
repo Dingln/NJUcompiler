@@ -3,6 +3,7 @@
 #include"string.h"
 #include"IR.h"
 #include"stdarg.h"
+#include "symbolTable.h"
 
 int varCount = 1;
 int tempCount = 1;

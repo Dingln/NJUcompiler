@@ -39,6 +39,7 @@ typedef struct Type_{
 typedef struct FieldList_{
 	char name[32];
 	enum {VARIABLE, STRUCTURETYPE} kind;
+	int val_no;
 
 	Type* type;							//type of the area;
 	struct FieldList_ *pre;			//for convenience of delete
@@ -61,6 +62,7 @@ extern FieldList* VarTable[HASH_LENGTH];
 extern FuncDef* FuncList;
 extern FieldList* Stack[MAX_EMBEDDED];
 extern int StackLevel;
+extern int val_no_count;
 
 bool compareFunc(FuncDef *func1, FuncDef *func2);
 bool compareFieldList(FieldList* node1, FieldList* node2);

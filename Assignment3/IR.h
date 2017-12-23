@@ -59,7 +59,7 @@ InterCode createDecop(IRKind kind, Operand op, int size);
 InterCode IRcodeConcat(int num, ...);
 
 extern InterCode IRhead, IRtail;
-extern int varCount;
+// extern int varCount;
 extern int labelCount;
 extern int tempCount;
 

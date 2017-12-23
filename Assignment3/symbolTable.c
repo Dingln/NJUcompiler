@@ -4,6 +4,8 @@
 #include <assert.h>
 
 int StackLevel = 0;
+int val_no_count = 1;
+
 FuncDef* FuncList = NULL;
 FieldList* VarTable[HASH_LENGTH];
 FieldList* Stack[MAX_EMBEDDED];
@@ -60,6 +62,10 @@ int insertVarTable(FieldList* node){
 	int no = calcHashIndex(node->name);	
 	
 	//insert from head:
+	//lab3
+	node->val_no = val_no_count;
+	val_no_count++;
+
 	FieldList* head=VarTable[no];
 	VarTable[no]=node;
 	if(head==NULL){
