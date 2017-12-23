@@ -131,7 +131,7 @@ void printIR(char *filename)
                     fprintf(fp, "IF ");
                     printOperand(p->u.ifop.op1, fp);
                     fprintf(fp, " %s ", p->u.ifop.relop);
-                    printOperand(p->u.ifop->op2, fp);
+                    printOperand(p->u.ifop.op2, fp);
                     fprintf(fp, " GOTO ");
                     printOperand(p->u.ifop.label, fp);
                     break;
