@@ -35,7 +35,7 @@ int main(int argc, char** argv){
     printf("at main\n");
 	outIR(IRhead);
 #endif
-		printIR("intercode.txt");
+		printIR("intercode.ir");
 	}
 
 //	else

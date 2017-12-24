@@ -498,6 +498,9 @@ InterCode translate_Exp(Node *node, Operand place)
 
     Node *child = node->Child;
 
+    if(strcmp(child->type, "LP") == 0) 
+        return translate_Exp(child->Sibling, place);
+
     // Exp__INT
     if(strcmp(child->type, "INT") == 0) {
         if(place == NULL)
