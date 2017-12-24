@@ -297,7 +297,7 @@ void outOp(Operand op)
 
 Operand createOperand(OperandKind kind, int val)
 {
-    Operand newOp = (Operand)malloc(sizeof(Operand));
+    Operand newOp = (Operand)malloc(sizeof(struct Operand_));
     newOp->kind = kind;
     switch(newOp->kind) {
         case CONSTANT: newOp->u.value = val; break;
@@ -323,7 +323,7 @@ Operand createOperand(OperandKind kind, int val)
 
 Operand createTemp()
 {   
-    Operand newtemp = (Operand)malloc(sizeof(Operand));
+    Operand newtemp = (Operand)malloc(sizeof(struct Operand_));
     newtemp->kind = TEMP;
     newtemp->u.var_no = tempCount;
     tempCount++;
@@ -332,7 +332,7 @@ Operand createTemp()
 
 Operand createLable()
 {
-    Operand newlable = (Operand)malloc(sizeof(Operand));
+    Operand newlable = (Operand)malloc(sizeof(struct Operand_));
     newlable->kind = LABEL;
     newlable->u.var_no = labelCount;
     labelCount++;

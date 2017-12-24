@@ -44,7 +44,7 @@ void deleteIR(InterCode c);
 void printIR(char *filename);
 void printOperand(Operand op, FILE *fp);
 
-void outIR(InterCode c);
+void outIR(InterCode c);void outIR(InterCode c);
 void outOp(Operand op);
 
 Operand createOperand(OperandKind kind, int val);

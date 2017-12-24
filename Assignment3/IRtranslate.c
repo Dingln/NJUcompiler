@@ -691,17 +691,21 @@ InterCode translate_Exp(Node *node, Operand place)
                 char * myfunc = child->value;
                 Node *node_arg = child->Sibling->Sibling;
 
-                Operand arglist = NULL;
+                Operand *arglist = (Operand *)malloc(sizeof(Operand));
                 InterCode code1 = translate_Args(node_arg, arglist);
-                
+#ifdef DEBUG
+    if(*arglist == NULL) 
+        printf("arglist null1\n");
+#endif
+
                 // write()
                 if(strcmp(myfunc, "write") == 0) {
 #ifdef DEBUG
     printf("at write\n");
-    if(arglist == NULL) 
-        printf("arglist null\n");
+    if(*arglist == NULL) 
+        printf("arglist null2\n");
 #endif
-                    InterCode tempcode1 = createSigop(WRITE, arglist->next);
+                    InterCode tempcode1 = createSigop(WRITE, (*arglist));
 #ifdef DEBUG
     printf("at write end\n");
 #endif
@@ -711,7 +715,7 @@ InterCode translate_Exp(Node *node, Operand place)
                 }
 
                 InterCode code2 = NULL;
-                Operand p = arglist->next;
+                Operand p = (*arglist);
                 for(; p != NULL; p = p->next){
                     InterCode tempcode = createSigop(ARG, p);
                     code2 = IRcodeConcat(2, code2, tempcode);
@@ -736,7 +740,7 @@ InterCode translate_Exp(Node *node, Operand place)
     }         
 }
 
-InterCode translate_Args(Node *node, Operand arg_list)
+InterCode translate_Args(Node *node, Operand *arg_list)
 {
 #ifdef DEBUG_BEGIN
     printf("Args\n");
@@ -752,19 +756,23 @@ InterCode translate_Args(Node *node, Operand arg_list)
         
         Operand t1 = createTemp();
         InterCode code1 = translate_Exp(node_exp, t1);
-        
-        // Arg concat
-        if(arg_list == NULL) {
+
 #ifdef DEBUG
-    if(arg_list == NULL)
+    printf("at args\n");
+#endif
+
+        // Arg concat
+        if(*arg_list == NULL) {
+            *arg_list = t1;
+            (*arg_list)->next = NULL;
+#ifdef DEBUG
+    if(*arg_list == NULL)
         printf("arglist NULL\n");
 #endif
-            arg_list = t1;
-            arg_list->next = NULL;
         }
         else {
-            t1->next = arg_list;
-            arg_list = t1;
+            t1->next = *arg_list;
+            *arg_list = t1;
         }
 
 #ifdef DEBUG
@@ -785,13 +793,13 @@ InterCode translate_Args(Node *node, Operand arg_list)
         InterCode code1 = translate_Exp(node_exp, t1);
 
         // Arg concat
-        if(arg_list == NULL) {
-            arg_list = t1;
-            arg_list->next = NULL;
+        if(*arg_list == NULL) {
+            *arg_list = t1;
+            (*arg_list)->next = NULL;
         }
         else {
-            t1->next = arg_list;
-            arg_list = t1;
+            t1->next = *arg_list;
+            *arg_list = t1;
         }
 
         InterCode code2 = translate_Args(node_arg, arg_list);
