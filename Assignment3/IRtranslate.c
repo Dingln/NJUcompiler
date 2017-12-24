@@ -193,6 +193,30 @@ InterCode translate_ExtDecList(Node *node)
 
 InterCode translate_VarDec(Node *node)
 {
+    if(node == NULL)
+        return NULL;
+#ifdef DEBUG_BEGIN
+    printf("VarDec\n");
+#endif
+    Node *child = node->Child;
+    
+    if(strcmp(child->type, "VarDec") == 0) {
+        Node *node_array = child->Child;
+        FieldList *var = findVar(node_array->value);
+        Node *node_int = child->Sibling->Sibling;
+
+        int size = 0;
+        sscanf(node_int->value, "%d", &size);
+        size = size * 4;
+#ifdef DEBUG_BEGIN
+    printf("size: %d\n", size);
+#endif
+        Operand arrayAddr = createOperand(VARIABLE, var->val_no);
+		InterCode code = createDecop(DEC, arrayAddr, size);
+
+        return code;
+    }
+
     return NULL;
 }
 
@@ -566,8 +590,35 @@ InterCode translate_Exp(Node *node, Operand place)
                 }
 
                 // TODO: Exp1 is array or struct type
-                else 
-                    return NULL;
+                else if(strcmp(node_exp->Child->type, "Exp") == 0 
+                        && strcmp(node_exp->Child->Sibling->type, "LB") == 0) {
+                        Node *node_id = node_exp->Child->Child;
+                        Node *node_int = node_exp->Child->Sibling->Sibling->Child;
+
+                        FieldList *myid = findVar(node_id->value);
+                        int size = 0;
+                        sscanf(node_int->value, "%d", &size);
+                        size = size * 4;
+                        Operand const_4 = createOperand(CONSTANT, size); 
+
+                        Operand var = createOperand(VARIABLE, myid->val_no);
+                        //Operand t1 = createOperand(TPOINTER, tempCount);
+                        Operand t1 = createTemp();
+						InterCode code1 = createBinop(ADD, t1, var, const_4);
+                        Operand t8=malloc(sizeof(struct Operand_));
+						memcpy(t8, t1, sizeof(struct Operand_));
+						t8->kind = TPOINTER;
+
+                        Operand t2 = createTemp();
+                        InterCode code2 = translate_Exp(node_exp2, t2);
+                        InterCode code3 = createAssign(ASSIGN, t8, t2);
+                        InterCode code4 = NULL;
+                        if(place != NULL)
+                            code4 = createAssign(ASSIGN, place, t8);
+
+                        return IRcodeConcat(4, code1, code2, code3, code4);
+                    }
+                    
             }
     
     // Exp__Exp_PLUS_Exp, 
@@ -734,7 +785,30 @@ InterCode translate_Exp(Node *node, Operand place)
                 return IRcodeConcat(3, code1, code2, callcode);
             }
     
-    // Exp__Exp_DOT_ID
+    // Exp__Exp_LB_Exp_RB
+    else if(strcmp(child->type, "Exp") == 0 && strcmp(child->Sibling->type, "LB") == 0) {
+        Node *node_id = child->Child;
+        Node *node_int = child->Sibling->Sibling->Child;
+
+        FieldList *myid = findVar(node_id->value);
+        int size = 0;
+        sscanf(node_int->value, "%d", &size);
+        size = size * 4;
+        Operand const_4 = createOperand(CONSTANT, size); 
+
+        Operand var = createOperand(VARIABLE, myid->val_no);
+		Operand t1 = createTemp();
+        //Operand t1 = createOperand(TPOINTER, tempCount);
+        InterCode code1 = createBinop(ADD, t1, var, const_4);
+		Operand t2 = malloc(sizeof(struct Operand_));
+		memcpy(t2, t1, sizeof(struct Operand_));
+		t2->kind = TPOINTER;
+        InterCode code2 = createAssign(ASSIGN, place, t2);
+
+        return IRcodeConcat(2, code1, code2);
+    }
+
+
     else {
 #ifdef DEBUG_BEGIN
     printf("   Exp_Else\n");

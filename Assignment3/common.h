@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <malloc.h>
 #include <math.h>
+#include <string.h>
 
 #include "syntaxTree.h"
 #include "semantic.h"

@@ -151,7 +151,7 @@ void printIR(char *filename)
                 case DEC:
                     fprintf(fp, "DEC ");
                     printOperand(p->u.decop.op,fp);
-                    fprintf(fp, "%d", p->u.decop.size);
+                    fprintf(fp, " %d", p->u.decop.size);
                     break;
                 default:
                     fprintf(fp, "Unknown IR type!\n");
@@ -249,7 +249,7 @@ void outIR(InterCode c)
                 case DEC:
                     printf( "DEC ");
                     outOp(p->u.decop.op);
-                    printf("%d", p->u.decop.size);
+                    printf(" %d", p->u.decop.size);
                     break;
                 default:
                     printf("Unknown IR type!\n");
@@ -303,7 +303,7 @@ Operand createOperand(OperandKind kind, int val)
         case CONSTANT: newOp->u.value = val; break;
         case ADDRESS:
         case VPOINTER:
-        case TPOINTER: newOp->u.var_no = val; break;
+        case TPOINTER: newOp->u.var_no = val; tempCount++; break;
         case TEMP: 
             newOp->u.var_no = val;
             tempCount++;

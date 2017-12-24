@@ -60,11 +60,11 @@ void ExtDef(Node* node){
 		//defination
 		if(strcmp(child->Sibling->type, "CompSt") == 0) {
 			FuncDef* newFunc = FunDec(child, varType, true, child->line);
-			
 			//TODO: TO DEBUG
 			// printFuncDef(newFunc);
 			// printf("ExtDef1\n");
 			
+
 			FuncDef *temp = findFunc(newFunc->name);
 			if(temp != NULL){
 				if(temp->is_define == true) {
@@ -101,6 +101,7 @@ void ExtDef(Node* node){
 			}
 			else 
 				insertFunc(newFunc);
+
 			
 			Type* rtnType = CompSt(child->Sibling, varType);
 			//TODO: TO DEBUG

@@ -28,13 +28,14 @@ int main(int argc, char** argv){
 	yyparse();
 
 	if(LexErrorFlag==1 && SynErrorFlag==1){
-		traversal(root, 0);
+//		traversal(root, 0);
 		Program(root);
 		IRhead =  translate_Program(root);
-#ifdef DEBUG
+//#ifdef DEBUG
     printf("at main\n");
 	outIR(IRhead);
-#endif
+//#endif
+
 		printIR("intercode.ir");
 	}
 
