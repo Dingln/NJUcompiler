@@ -1,7 +1,10 @@
-#include "syntaxTree.h"
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
+// #include "syntaxTree.h"
+// #include <stdlib.h>
+// #include <assert.h>
+// #include <string.h>
+
+#include "common.h"
+
 
 Node* getFirstChild(Node* parent){
 	if(parent==NULL)

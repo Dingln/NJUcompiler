@@ -2,8 +2,13 @@
 #define __IRTRANSLATE_
 
 #include "IR.h"
-#include "semantic.h"
+// #include "semantic.h"
 #include "symbolTable.h"
+
+// #include "common.h"
+
+#define DEBUG
+#define DEBUG_BEGIN
 
 InterCode translate_Program(Node *root);
 InterCode translate_ExtDefList(Node *node);

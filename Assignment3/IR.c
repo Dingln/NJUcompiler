@@ -1,9 +1,13 @@
-#include"stdlib.h"
-#include"stdio.h"
-#include"string.h"
-#include"IR.h"
-#include"stdarg.h"
-#include "symbolTable.h"
+// #include"stdlib.h"
+// #include"stdio.h"
+// #include"string.h"
+// #include"IR.h"
+// #include"stdarg.h"
+// #include "symbolTable.h"
+
+#include "common.h"
+
+// #define DEBUG
 
 int varCount = 1;
 int tempCount = 1;
@@ -64,7 +68,7 @@ void printIR(char *filename)
     }
     else {
         InterCode p = IRhead;
-        while(p->next != IRhead) {
+        while(p != NULL) {
             switch(p->kind) {
                 case ASSIGN: 
                     printOperand(p->u.assign.left, fp);
@@ -147,7 +151,7 @@ void printIR(char *filename)
                 case DEC:
                     fprintf(fp, "DEC ");
                     printOperand(p->u.decop.op,fp);
-                    printOperand(p->u.decop.size,fp);
+                    fprintf(fp, "%d", p->u.decop.size);
                     break;
                 default:
                     fprintf(fp, "Unknown IR type!\n");
@@ -157,6 +161,103 @@ void printIR(char *filename)
         }
     }
     fclose(fp);
+}
+
+void outIR(InterCode c)
+{
+        InterCode p = c;
+        while(p != NULL) {
+            switch(p->kind) {
+                case ASSIGN: 
+                    outOp(p->u.assign.left);
+                    printf( " := ");
+                    outOp(p->u.assign.right);
+                    break;
+                case ADD:
+                    outOp(p->u.binop.result);
+                    printf(" := ");
+                    outOp(p->u.binop.op1);
+                    printf(" + ");
+                    outOp(p->u.binop.op2);
+                    break;
+                case SUB:
+                    outOp(p->u.binop.result);
+                    printf(" := ");
+                    outOp(p->u.binop.op1);
+                    printf(" - ");
+                    outOp(p->u.binop.op2);
+                    break;
+                case MUL:
+                    outOp(p->u.binop.result);
+                    printf(" := ");
+                    outOp(p->u.binop.op1);
+                    printf(" * ");
+                    outOp(p->u.binop.op2);
+                    break;
+                case DIVIDE:
+                    outOp(p->u.binop.result);
+                    printf(" := ");
+                    outOp(p->u.binop.op1);
+                    printf(" / ");
+                    outOp(p->u.binop.op2);
+                    break;
+                case LABELOP:
+                    printf("LABEL ");
+                    outOp(p->u.sigop.op);
+                    printf(" : ");
+                    break;
+                case GOTO:
+                    printf("GOTO ");
+                    outOp(p->u.sigop.op);
+                    break;
+                case RETURNOP:
+                    printf("RETURN ");
+                    outOp(p->u.sigop.op);
+                    break;
+                case READ:
+                    printf("READ ");
+                    outOp(p->u.sigop.op);
+                    break;
+                case WRITE:
+                    printf("WRITE ");
+                    outOp(p->u.sigop.op);
+                    break;
+                case ARG:
+                    printf("ARG ");
+                    outOp(p->u.sigop.op);
+                    break;
+                case PARAM:
+                    printf("PARAM ");
+                    outOp(p->u.sigop.op);
+                    break;
+                case IFOP:
+                    printf("IF ");
+                    outOp(p->u.ifop.op1);
+                    printf(" %s ", p->u.ifop.relop);
+                    outOp(p->u.ifop.op2);
+                    printf(" GOTO ");
+                    outOp(p->u.ifop.label);
+                    break;
+                case CALL:
+                    outOp(p->u.callop.result);
+                    printf(" := CALL ");
+                    printf("%s", p->u.callop.name);
+                    break;
+                case FUNCTION:
+                    printf("FUNCTION %s :", p->u.funop.name);
+                    break;
+                case DEC:
+                    printf( "DEC ");
+                    outOp(p->u.decop.op);
+                    printf("%d", p->u.decop.size);
+                    break;
+                default:
+                    printf("Unknown IR type!\n");
+            }
+            p = p->next;
+            printf("\n");
+        }
+
 }
 
 void printOperand(Operand op, FILE *fp)
@@ -175,6 +276,24 @@ void printOperand(Operand op, FILE *fp)
     }
 
 }
+
+void outOp(Operand op)
+{
+    if(op == NULL)
+        return;
+    switch(op->kind) {
+
+        case CONSTANT: printf("#%d", op->u.value); break;
+        case VARIABLE: printf("v%d", op->u.var_no); break;
+        case ADDRESS: printf("&%d", op->u.var_no); break;
+        case TEMP: printf("t%d", op->u.var_no); break;
+        case LABEL: printf("label%d", op->u.var_no); break;
+        case VPOINTER: printf("*v%d", op->u.var_no); break;
+        case TPOINTER: printf("*t%d", op->u.var_no); break;
+        default: printf("Unknown operand!\n");
+    }
+}
+
 
 Operand createOperand(OperandKind kind, int val)
 {
@@ -195,7 +314,7 @@ Operand createOperand(OperandKind kind, int val)
             break;
         case VARIABLE:
             newOp->u.var_no = val;
-            varCount++;
+            // varCount++;
             break;
         default: printf("Unknown operand!\n");
     }
@@ -227,11 +346,19 @@ InterCode IRcodeConcat(int num, ...)
     va_start(myarg, num);
     for(int i = 0; i < num; i++) {
         InterCode code = va_arg(myarg, InterCode);
+        if(code == NULL)
+            continue;
+
         if(IRtemphead == NULL) {
             IRtemphead = code;
             IRtemptail = IRtemphead;
-            while(IRtemptail->next != NULL)
+#ifdef DEBUGIR
+    if(code->next == NULL)
+        printf("in concat: \n");
+#endif
+            while(IRtemptail->next != NULL) {
                 IRtemptail = IRtemptail->next;
+            }
         }
         else {
             IRtemptail->next = code;
@@ -246,7 +373,7 @@ InterCode IRcodeConcat(int num, ...)
 
 InterCode createAssign(IRKind kind, Operand left, Operand right) 
 {
-    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    InterCode ircode = (InterCode)malloc(sizeof(struct InterCode_));
     ircode->kind = kind;
     ircode->u.assign.left = left;
     ircode->u.assign.right = right;
@@ -256,7 +383,7 @@ InterCode createAssign(IRKind kind, Operand left, Operand right)
 
 InterCode createBinop(IRKind kind, Operand result, Operand op1, Operand op2)
 {
-    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    InterCode ircode = (InterCode)malloc(sizeof(struct InterCode_));
     ircode->kind = kind;
     ircode->u.binop.op1 = op1;
     ircode->u.binop.op2 = op2;
@@ -267,7 +394,7 @@ InterCode createBinop(IRKind kind, Operand result, Operand op1, Operand op2)
 
 InterCode createSigop(IRKind kind, Operand op)
 {
-    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    InterCode ircode = (InterCode)malloc(sizeof(struct InterCode_));
     ircode->kind = kind;
     ircode->u.sigop.op = op;
     ircode->pre = ircode->next = NULL;
@@ -276,7 +403,7 @@ InterCode createSigop(IRKind kind, Operand op)
 
 InterCode createIfop(IRKind kind, Operand op1, Operand op2, Operand label, char *relop)
 {
-    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    InterCode ircode = (InterCode)malloc(sizeof(struct InterCode_));
     ircode->kind = kind;
     ircode->u.ifop.label = label;
     ircode->u.ifop.op1 = op1;
@@ -288,7 +415,7 @@ InterCode createIfop(IRKind kind, Operand op1, Operand op2, Operand label, char 
 
 InterCode createFunop(IRKind kind, char *name)
 {
-    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    InterCode ircode = (InterCode)malloc(sizeof(struct InterCode_));
     ircode->kind = kind;
     strcpy(ircode->u.funop.name, name);
     ircode->pre = ircode->next = NULL;
@@ -297,7 +424,7 @@ InterCode createFunop(IRKind kind, char *name)
 
 InterCode createCallop(IRKind kind, Operand result, char *name)
 {
-    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    InterCode ircode = (InterCode)malloc(sizeof(struct InterCode_));
     ircode->kind = kind;
     ircode->u.callop.result = result;
     strcpy(ircode->u.callop.name, name);
@@ -307,7 +434,7 @@ InterCode createCallop(IRKind kind, Operand result, char *name)
 
 InterCode createDecop(IRKind kind, Operand op, int size)
 {
-    InterCode ircode = (InterCode)malloc(sizeof(InterCode));
+    InterCode ircode = (InterCode)malloc(sizeof(struct InterCode_));
     ircode->kind = kind;
     ircode->u.decop.op = op;
     ircode->u.decop.size = size;

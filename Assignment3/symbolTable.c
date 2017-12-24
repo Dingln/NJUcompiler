@@ -1,7 +1,9 @@
-#include "symbolTable.h"
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+// #include "symbolTable.h"
+// #include <stdlib.h>
+// #include <string.h>
+// #include <assert.h>
+
+#include "common.h"
 
 int StackLevel = 0;
 int val_no_count = 1;
@@ -34,7 +36,7 @@ void initVarTable(){
 	writefunc->rtn->u.basic = INTTYPE;
 	writefunc->param = malloc(sizeof(FieldList));
 	strcpy(writefunc->param->name, "paramOFwrite");
-	writefunc->param->kind = VARIABLE;
+	writefunc->param->kind = VARIABLETYPE;
 	writefunc->param->type = writefunc->rtn;
 	writefunc->param->pre = NULL;
 	writefunc->param->next = NULL;

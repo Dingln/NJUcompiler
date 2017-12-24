@@ -1,9 +1,11 @@
 #ifndef __SYMBOLTABLE__
 #define __SYMBOLTABLE__
 
-#include<stdio.h>
-#include<math.h>
-#include <semantic.h>
+#include <stdio.h>
+#include <math.h>
+// #include "semantic.h"
+
+// #include "common.h"
 
 #define INTTYPE		0
 #define FLOATTYPE		1
@@ -38,7 +40,7 @@ typedef struct Type_{
 
 typedef struct FieldList_{
 	char name[32];
-	enum {VARIABLE, STRUCTURETYPE} kind;
+	enum {VARIABLETYPE, STRUCTURETYPE} kind;
 	int val_no;
 
 	Type* type;							//type of the area;

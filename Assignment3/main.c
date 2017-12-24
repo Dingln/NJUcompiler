@@ -1,11 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "syntaxTree.h"
-#include "syntax.tab.h"
-#include "symbolTable.h"
-#include "semantic.h"
-#include "IR.h"
-#include "IRtranslate.h"
+// #include <stdlib.h>
+// #include <stdio.h>
+// #include "syntaxTree.h"
+// #include "syntax.tab.h"
+// #include "symbolTable.h"
+// #include "semantic.h"
+// #include "IR.h"
+// #include "IRtranslate.h"
+
+#include "common.h"
 
 extern int LexErrorFlag;
 extern int SynErrorFlag;
@@ -28,7 +30,11 @@ int main(int argc, char** argv){
 	if(LexErrorFlag==1 && SynErrorFlag==1){
 		traversal(root, 0);
 		Program(root);
-		translate_Program(root);
+		IRhead =  translate_Program(root);
+#ifdef DEBUG
+    printf("at main\n");
+	outIR(IRhead);
+#endif
 		printIR("intercode.txt");
 	}
 

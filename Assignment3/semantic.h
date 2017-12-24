@@ -5,6 +5,8 @@
 #include "symbolTable.h"
 #include "syntaxTree.h"
 
+// #include "common.h"
+
 /*functions for semantic checking*/
 void Program(Node* root);
 void ExtDefList(Node* node);

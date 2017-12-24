@@ -1,10 +1,13 @@
-#include "semantic.h"
-#include <assert.h>
-#include <string.h>
-#include <malloc.h>
+// #include "semantic.h"
+// #include <assert.h>
+// #include <string.h>
+// #include <malloc.h>
+
+#include "common.h"
 
 void Program(Node* root){
 	if(root!=NULL){
+		initVarTable();
 		ExtDefList(root->Child);
 	}
 	//TODO: YOU MAY NEED TO CHECK FUNCLIST HERE.

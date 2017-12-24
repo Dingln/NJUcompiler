@@ -1,6 +1,8 @@
 #ifndef _INTERCODE_H
 #define _INTERCODE_H
 
+#include "common.h"
+
 typedef struct Operand_ *Operand;
 typedef struct InterCode_* InterCode;
 
@@ -13,8 +15,7 @@ typedef enum { ASSIGN, ADD, SUB, MUL, DIVIDE, LABELOP, IFOP,
             } IRKind;
 
 struct Operand_ {
-    enum {VARIABLE, CONSTANT, ADDRESS, TEMP, 
-          LABEL, VPOINTER, TPOINTER} kind;
+    OperandKind kind;
     union {
         int var_no;
         int value;
@@ -23,8 +24,7 @@ struct Operand_ {
 };
 
 struct InterCode_ {
-    enum {ASSIGN, ADD, SUB, MUL, DIVIDE, LABELOP, IFOP, GOTO, 
-    RETURNOP, READ, WRITE, CALL, ARG, FUNCTION, PARAM, DEC} kind;
+    IRKind kind;
     union {
         struct {Operand left, right; }assign; //assign
         struct {Operand result, op1, op2; }binop; //add, sub, mul, divide
@@ -43,6 +43,9 @@ void insertIR(InterCode c);
 void deleteIR(InterCode c);
 void printIR(char *filename);
 void printOperand(Operand op, FILE *fp);
+
+void outIR(InterCode c);
+void outOp(Operand op);
 
 Operand createOperand(OperandKind kind, int val);
 Operand createTemp();
